@@ -14,7 +14,7 @@ app.listen(PORT, () => {
 const BOT_CONFIG = {
   host: 'zero7even.net',
   port: 25565,
-  username: 'atiolp', 
+  username: 'atqwerty', 
 };
 
 // جعل وقت إعادة الاتصال بارد (كل دقيقتين) عشان ما يسبب سبام للسيرفر
