@@ -1,26 +1,24 @@
 import mineflayer from 'mineflayer';
 import express from 'express';
 
-// إجبار السيرفر على استخدام بورت ريندر المتوافق لمنع الكراش
-const PORT = process.env.PORT || '10000';
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 const app = express();
 app.get('/', (_req, res) => {
-  res.status(200).send('البوت شغال ومتجه للفارم في السيرفر الجديد!');
+  res.send('البوت شغال 24 ساعة بدون قفز!');
+});
+app.listen(PORT, () => {
+  console.log(`الموقع جاهز للربط مع UptimeRobot على بورت ${PORT}`);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Express] الموقع مستقر ويستمع على بورت ${PORT}`);
-});
-
-// إعدادات السيرفر الجديد
 const BOT_CONFIG = {
-  host: 'draftsmp.net', // 👈 حط آيبي السيرفر الجديد هنا
+  host: 'zero7even.net',
   port: 25565,
-  username: 'atqwerty', // 👈 حط اسم حسابك هنا
+  username: 'atiolp', 
 };
 
-const RECONNECT_DELAY_MS = 5000; // إعادة اتصال آمنة كل 30 ثانية
+// جعل وقت إعادة الاتصال بارد (كل دقيقتين) عشان ما يسبب سبام للسيرفر
+const RECONNECT_DELAY_MS = 30000; 
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleReconnect(reason: string) {
@@ -48,35 +46,22 @@ function extractText(obj: unknown): string {
 }
 
 function startBot() {
-  console.log('[Bot] جاري الاتصال بالسيرفر الجديد...');
+  console.log('[Bot] جاري الاتصال بالسيرفر...');
+
   const bot = mineflayer.createBot(BOT_CONFIG);
 
   bot.on('message', (jsonMsg) => {
     const text = jsonMsg.toString();
     console.log(`[Chat] ${text}`);
 
-    // 1. رصد رسالة الحماية وتسجيل الدخول
-    if (text.includes('login') || text.includes('/login') || text.includes('تسجيل الدخول') || text.includes('Please, login')) {
+    if (text.includes('login') || text.includes('/login') || text.includes('تسجيل الدخول')) {
       console.log('[Bot] 🔑 تم رصد رسالة الحماية! جاري تسجيل الدخول...');
       bot.chat('/login AZERTY65'); 
     }
-
-    // 2. الخدعة: رصد نجاح الدخول والذهاب للفارم فوراً لتفادي النقل التلقائي للسبون
-    if (text.includes('Successfully logged in') || text.includes('تم تسجيل الدخول بنجاح') || text.includes('logged in')) {
-      console.log('[Bot] 🏃 تم تسجيل الدخول! انتظر ثانيتين للانتقال التلقائي إلى الفارم...');
-      
-      setTimeout(() => {
-        // ⚠️ غيّر الأمر بالأسفل (/home farm) للأمر الشغال في سيرفرك الجديد مثل /warp أو /back
-        bot.chat('/afk'); 
-        console.log('[Bot] ⚡ تم إرسال أمر الانتقال للفارم بنجاح.');
-      }, 2000);
-    }
   });
 
-  // تفعيل التشييف التلقائي فور الرسبنة في العالم لحمايتك
   bot.on('spawn', () => {
-    console.log('[Bot] ✓ البوت رسبن بنجاح! جاري تفعيل وضع الـ Shift (Sneak)...');
-    bot.setControlState('sneak', true); 
+    console.log('[Bot] ✓ البوت رسبن رسميّاً وهو الآن واقف وثابت بدون حركة.');
   });
 
   bot.on('kicked', (reason) => {
