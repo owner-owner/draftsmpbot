@@ -1,29 +1,31 @@
 import mineflayer from 'mineflayer';
 import express from 'express';
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+// إجبار السيرفر على استخدام بورت ريندر المتوافق لمنع الكراش
+const PORT = process.env.PORT || '10000';
 
 const app = express();
 app.get('/', (_req, res) => {
-  res.send('بوت zero7even شغال 24 ساعة!');
-});
-app.listen(PORT, () => {
-  console.log(`الموقع جاهز للربط مع UptimeRobot على بورت ${PORT}`);
+  res.status(200).send('البوت شغال ومتجه للفارم في السيرفر الجديد!');
 });
 
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Express] الموقع مستقر ويستمع على بورت ${PORT}`);
+});
+
+// إعدادات السيرفر الجديد
 const BOT_CONFIG = {
-  host: 'zero7even.net',
+  host: 'draftsmp.net', // 👈 حط آيبي السيرفر الجديد هنا
   port: 25565,
-  username: 'AZSRGDTS34245',
+  username: 'atqwerty', // 👈 حط اسم حسابك هنا
 };
 
-const RECONNECT_DELAY_MS = 5000;
-
+const RECONNECT_DELAY_MS = 5000; // إعادة اتصال آمنة كل 30 ثانية
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleReconnect(reason: string) {
   if (reconnectTimeout) return;
-  console.log(`[Reconnect] سيتم إعادة الاتصال خلال ${RECONNECT_DELAY_MS / 1000} ثواني... السبب: ${reason}`);
+  console.log(`[Reconnect] سيتم إعادة الاتصال خلال ${RECONNECT_DELAY_MS / 1000} ثانية... السبب: ${reason}`);
   reconnectTimeout = setTimeout(() => {
     reconnectTimeout = null;
     startBot();
@@ -46,49 +48,50 @@ function extractText(obj: unknown): string {
 }
 
 function startBot() {
-  console.log('[Bot] جاري الاتصال بالسيرفر...');
-
+  console.log('[Bot] جاري الاتصال بالسيرفر الجديد...');
   const bot = mineflayer.createBot(BOT_CONFIG);
 
-  bot.on('spawn', () => {
-    console.log('[Bot] ✓ البوت دخل سيرفر zero7even بنجاح! (spawn)');
-  });
-
-  // Log every chat message so we can see server responses (captcha prompts, auth messages, etc.)
   bot.on('message', (jsonMsg) => {
     const text = jsonMsg.toString();
     console.log(`[Chat] ${text}`);
-  });
 
-  // Log title/subtitle packets (some servers show captcha or auth prompts as titles)
-  bot._client.on('title', (packet: Record<string, unknown>) => {
-    console.log('[Title packet]', JSON.stringify(packet));
-  });
-
-  const afkInterval = setInterval(() => {
-    if (bot.entity) {
-      bot.setControlState('jump', true);
-      setTimeout(() => bot.setControlState('jump', false), 100);
+    // 1. رصد رسالة الحماية وتسجيل الدخول
+    if (text.includes('login') || text.includes('/login') || text.includes('تسجيل الدخول') || text.includes('Please, login')) {
+      console.log('[Bot] 🔑 تم رصد رسالة الحماية! جاري تسجيل الدخول...');
+      bot.chat('/login AZERTY65'); 
     }
-  }, 60000);
+
+    // 2. الخدعة: رصد نجاح الدخول والذهاب للفارم فوراً لتفادي النقل التلقائي للسبون
+    if (text.includes('Successfully logged in') || text.includes('تم تسجيل الدخول بنجاح') || text.includes('logged in')) {
+      console.log('[Bot] 🏃 تم تسجيل الدخول! انتظر ثانيتين للانتقال التلقائي إلى الفارم...');
+      
+      setTimeout(() => {
+        // ⚠️ غيّر الأمر بالأسفل (/home farm) للأمر الشغال في سيرفرك الجديد مثل /warp أو /back
+        bot.chat('/afk'); 
+        console.log('[Bot] ⚡ تم إرسال أمر الانتقال للفارم بنجاح.');
+      }, 2000);
+    }
+  });
+
+  // تفعيل التشييف التلقائي فور الرسبنة في العالم لحمايتك
+  bot.on('spawn', () => {
+    console.log('[Bot] ✓ البوت رسبن بنجاح! جاري تفعيل وضع الـ Shift (Sneak)...');
+    bot.setControlState('sneak', true); 
+  });
 
   bot.on('kicked', (reason) => {
-    clearInterval(afkInterval);
     const readable = extractText(reason);
     console.log(`[Kicked] النص: "${readable}"`);
-    console.log('[Kicked] Raw:', JSON.stringify(reason, null, 2));
     scheduleReconnect(`kicked: ${readable}`);
   });
 
   bot.on('end', (reason) => {
-    clearInterval(afkInterval);
     console.log(`[End] سبب انتهاء الاتصال: "${reason}"`);
     scheduleReconnect(`end: ${reason}`);
   });
 
   bot.on('error', (err) => {
     console.log(`[Error] نوع الخطأ: ${err.name}, الرسالة: ${err.message}`);
-    console.log('[Error] Stack:', err.stack);
   });
 }
 
