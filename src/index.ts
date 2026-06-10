@@ -11,7 +11,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 const BOT_CONFIG = {
-  host: 'zero7even', 
+  host: 'zero7even.net', 
   port: 25565,
   username: 'atqwerty', 
 };
